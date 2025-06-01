@@ -4,7 +4,7 @@ import os
 
 Name = input("Enter your name: ")
 
-# to validate number entry
+# to validate number entry and input
 def get_positive_float(prompt):
     while True:
         # Ask user for input
@@ -20,6 +20,13 @@ def get_positive_float(prompt):
         except ValueError:
             print("Invalid input. Please enter a number.")
 
+# to get lumpsum investment functionality
+def get_optional_lumpsum():
+    response = input("Do you want to add a lumpsum investment? (y/n): ").lower()
+    if response == 'y':
+        return get_positive_float("Enter the lumpsum investment amount: ")
+    return 0
+
 # for investment frequency
 def plan():
     while True:
@@ -32,12 +39,15 @@ def plan():
             mi = monthly_investment
         return mi
 
-# to calculate SIP
-def calculate_sip(mi, err, tp):
+# to calculate SIP and lumpsum
+def calculate_sip(mi, err, tp, lumpsum):
     i=err/12/100
     M=tp*12
+
     SIP=mi*((((1+i)**(M))-1)*(1+i))/i
-    return SIP, M
+    lumpsum_value = lumpsum * ((1+i) ** M)
+    total_value  = SIP + lumpsum_value
+    return SIP, lumpsum_value, total_value
 
 # to show yearly growth table
 def show_yearly_summary(mi, err, tp):
@@ -72,34 +82,41 @@ def plot_yearly_growth(mi, err, tp):
     plt.show()
 
 # To save output to csv file using csv module
-def save_summary_to_csv(mi, err, tp, fv, total_invested, returns):
+def save_summary_to_csv(Name, mi, err, tp, fv, lumpsum_value, total_invested, returns):
     filename = "sip_summary.csv"
     file_exists = os.path.isfile(filename)
     with open(filename, mode='a', newline='') as file:
         writer = csv.writer(file)
         # Write header  if new file
         if not file_exists:
-            writer.writerow(["Monthly Investment", "Rate (%)", "Years", "Final Value", "Total Invested", "Gain"])
-        writer.writerow([mi, err, tp, round(fv), round(total_invested), round(returns)])
+            writer.writerow(["Name", "Monthly Investment", "Rate (%)", "Years", "Final Value", "Lumpsum Value", "Total Invested", "Gain"])
+        writer.writerow([Name, mi, err, tp, round(fv), round(lumpsum_value), round(total_invested), round(returns)])
     print(f"\n Summary saved to '{filename}' successfully.")
+
+
+
+# Main script
 
 mi = plan()
 # mi=get_positive_float("Enter Monthly Investment : ")
 err=get_positive_float("Enter the  Expected return rate : ")
-tp=get_positive_float("Enter the time period : ")
+tp=get_positive_float("Enter the time period (in years) : ")
+lumpsum = get_optional_lumpsum()
 
-fv, total_months = calculate_sip(mi, err, tp)
+sip_value, lumpsum_value, fv = calculate_sip(mi, err, tp, lumpsum)
 
 show_yearly_summary(mi, err, tp)
 plot_yearly_growth(mi, err, tp)
 
-total_invested = mi * total_months
+total_invested = mi * tp * 12 + lumpsum
 returns = fv - total_invested
 
-print("\n-------- SIP Summary ----------")
-print(f"Name :   {Name}")
-print(f"Total Invested Amount :  ₹ {round(total_invested, 2)}")
-print(f"Estimated Returns :      ₹ {round(returns, 2)}")
-print(f"Future Value :           ₹ {round(fv, 2)}")
+print("\n-------- 📊 SIP Summary ----------")
+print(f"Name of Investor :            {Name}")
+print(f"Future Value of SIP :       ₹ {round(sip_value, 2)} ")
+print(f"Future value of Lumpsum :   ₹ {round(lumpsum_value, 2)}")
+print(f"Total Invested Amount :     ₹ {round(total_invested, 2)}")
+print(f"Estimated Returns :         ₹ {round(returns, 2)}")
+print(f"Total Future Value :        ₹ {round(fv, 2)}")
 
-save_summary_to_csv(mi, err, tp, fv, total_invested, returns)
+save_summary_to_csv(Name, mi, err, tp, fv, lumpsum_value, total_invested, returns)
