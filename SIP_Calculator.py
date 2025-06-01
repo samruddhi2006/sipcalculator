@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+import csv
+import os
 
 Name = input("Enter your name: ")
 
@@ -69,6 +71,18 @@ def plot_yearly_growth(mi, err, tp):
     plt.tight_layout()
     plt.show()
 
+# To save output to csv file using csv module
+def save_summary_to_csv(mi, err, tp, fv, total_invested, returns):
+    filename = "sip_summary.csv"
+    file_exists = os.path.isfile(filename)
+    with open(filename, mode='a', newline='') as file:
+        writer = csv.writer(file)
+        # Write header  if new file
+        if not file_exists:
+            writer.writerow(["Monthly Investment", "Rate (%)", "Years", "Final Value", "Total Invested", "Gain"])
+        writer.writerow([mi, err, tp, round(fv), round(total_invested), round(returns)])
+    print(f"\n Summary saved to '{filename}' successfully.")
+
 mi = plan()
 # mi=get_positive_float("Enter Monthly Investment : ")
 err=get_positive_float("Enter the  Expected return rate : ")
@@ -87,3 +101,5 @@ print(f"Name :   {Name}")
 print(f"Total Invested Amount :  ₹ {round(total_invested, 2)}")
 print(f"Estimated Returns :      ₹ {round(returns, 2)}")
 print(f"Future Value :           ₹ {round(fv, 2)}")
+
+save_summary_to_csv(mi, err, tp, fv, total_invested, returns)
